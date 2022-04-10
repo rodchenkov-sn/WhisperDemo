@@ -9,9 +9,6 @@ from flask import Flask, request, jsonify, abort
 
 app = Flask(__name__)
 
-import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
 
 @dataclass
 class Client:
@@ -58,7 +55,7 @@ def add_new_peer():
 
 
 def main():
-    port = int(input('port:'))
+    port = int(input('port: '))
     app.run(host='0.0.0.0', port=port, debug=False)
 
 
