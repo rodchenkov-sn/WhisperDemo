@@ -1,0 +1,31 @@
+syntax = "proto2";
+
+message User {
+    required string username = 1;
+}
+
+message ConnectInfo {
+    required string username = 1;
+    required string dockingUrl = 2;
+    required int32 redockPort = 3;
+    required int32 whisperPort = 4;
+    required string frontendUrl = 5;
+}
+
+message SimpleResponse {
+    required bool ok = 1;
+    optional string desc = 2;
+}
+
+message Message {
+    required string username = 1;
+    required string text = 2;
+    required bool sign = 3;
+    required int32 ttl = 4;
+}
+
+service BackendService {
+    rpc Connect (ConnectInfo) returns (SimpleResponse);
+    rpc GetUsers (User) returns (stream User);
+    rpc SendMessage (Message) returns (SimpleResponse);
+}

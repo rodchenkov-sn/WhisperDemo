@@ -1,3 +1,5 @@
 flask
 requests
 cryptography
+grpcio
+protobuf

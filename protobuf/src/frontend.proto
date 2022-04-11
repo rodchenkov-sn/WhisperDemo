@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+message FsMessage {
+    required string text = 1;
+    optional string username = 2;
+}
+
+message FsSimpleResponse {
+    required bool ok = 1;
+}
+
+service FrontendService {
+    rpc ProcessNewMessage (FsMessage) returns (FsSimpleResponse);
+}

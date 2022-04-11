@@ -26,6 +26,15 @@ class NetInfo:
 netinfo = NetInfo(None, None)
 
 
+@dataclass
+class UserInfo:
+    username: str
+    pubkey: str
+
+
+user_infos = []
+
+
 def request_redock(source: Client, target: Client):
     adr = f'http://{source.base}:{source.redock_port}/redock'
     requests.post(adr, json={'next': f'{target.base}:{target.whisper_port}'})
@@ -36,7 +45,7 @@ def bad_request(error):
     return jsonify({ 'error': 'Bad request' }), 400
 
 
-@app.post("/dock")
+@app.post('/dock')
 def add_new_peer():
     if not request.json:
         abort(400)
@@ -51,7 +60,26 @@ def add_new_peer():
     else:
         request_redock(netinfo.tail, new_tail)
     netinfo.tail = new_tail
+    username = request.json['username']
+    pubkey = request.json['pubkey']
+    user_infos.append(UserInfo(username, pubkey))
     return jsonify({'next': f'{netinfo.head.base}:{netinfo.head.whisper_port}'}), 200
+
+
+@app.get('/users')
+def get_num_users():
+    return jsonify({'num_users': len(user_infos)}), 200
+
+
+@app.get('/users/<id_s>')
+def get_user(id_s):
+    id = int(id_s)
+    if id >= len(user_infos):
+        abort(400)
+    return jsonify({
+        'username': user_infos[id].username,
+        'pubkey': user_infos[id].pubkey
+    }), 200
 
 
 def main():
