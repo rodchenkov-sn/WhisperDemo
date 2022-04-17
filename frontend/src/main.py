@@ -1,3 +1,4 @@
+import argparse
 import grpc
 import threading
 
@@ -27,22 +28,18 @@ class FrontendServicer(fss.FrontendServiceServicer):
 
 
 class UserInterface(threading.Thread):
-    def __init__(self, backend_port: int, redock_port: int, listener_port: int, docker_url: str, username: str):
+    def __init__(self, backend_addr: str, self_addr: str):
         super().__init__()
-        self.__backend_port = backend_port
-        self.__redock_port = redock_port
-        self.__listener_port = listener_port
-        self.__docker_url = docker_url
-        self.__username = username
-        self.__channel = None
-        self.__backend = None
+        self.__backend = bss.BackendServiceStub(grpc.insecure_channel(backend_addr))
+        self.__addr = self_addr
+        self.__registered = False
 
 
     def run(self):
         while True:
             cmd = input('|||| ')
             if cmd == 'help':
-                print('help send list connect quit')
+                print('help send list reg quit')
             elif cmd == 'list':
                 for message in messages:
                     u = message.sender
@@ -51,12 +48,10 @@ class UserInterface(threading.Thread):
                     t = message.text
                     print(f'{u} : {t}')
             elif cmd == 'send':
-                if self.__backend is None:
-                    print('not connected')
+                if not self.__registered:
+                    print('not registered.')
                     continue
-                for u in self.__backend.GetUsers(bs.User(username='')):
-                    print(u.username)
-                rec = input('? ')
+                rec = input('to: ')
                 sign = input('sign? y/n: ') == 'y'
                 ttl = int(input('ttl: '))
                 text = input('text: ')
@@ -70,17 +65,15 @@ class UserInterface(threading.Thread):
                     print('ok.')
                 else:
                     print(resp.desc)
-            elif cmd == 'connect':
-                self.__channel = grpc.insecure_channel(f'localhost:{self.__backend_port}')
-                self.__backend = bss.BackendServiceStub(self.__channel)
+            elif cmd == 'reg':
+                username = input('username: ')
                 resp = self.__backend.Connect(bs.ConnectInfo(
-                    username=self.__username,
-                    dockingUrl = self.__docker_url,
-                    redockPort = self.__redock_port,
-                    frontendUrl = f'localhost:{self.__listener_port}'
+                    username=username,
+                    frontendUrl=self.__addr
                 ))
                 if resp.ok:
-                    print('connected.')
+                    print('registered.')
+                    self.__registered = True
                 else:
                     print(resp.desc)
             else:
@@ -88,18 +81,17 @@ class UserInterface(threading.Thread):
             
 
 def main():
-    backend_port = int(input('backend port: '))
-    redock_port = int(input('redock port: '))
-    listener_port = int(input('listener port: '))
-    docker_url = input('docker url: ')
-    username = input('username: ')
+    parser = argparse.ArgumentParser(description='whisper demo text ui')
+    parser.add_argument('host', type=str, help='ui host address')
+    parser.add_argument('node', type=str, help='node address')
+    args = parser.parse_args()
 
-    ui = UserInterface(backend_port, redock_port, listener_port, docker_url, username)
+    ui = UserInterface(args.node, args.host)
     ui.start()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
     fss.add_FrontendServiceServicer_to_server(FrontendServicer(), server)
-    server.add_insecure_port(f'[::]:{listener_port}')
+    server.add_insecure_port(args.host)
     server.start()
     server.wait_for_termination()
 

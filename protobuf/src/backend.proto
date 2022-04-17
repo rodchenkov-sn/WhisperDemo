@@ -1,14 +1,10 @@
 syntax = "proto2";
 
-message User {
-    required string username = 1;
-}
+// frontend
 
 message ConnectInfo {
     required string username = 1;
-    required string dockingUrl = 2;
-    required int32 redockPort = 3;
-    required string frontendUrl = 4;
+    required string frontendUrl = 2;
 }
 
 message SimpleResponse {
@@ -23,14 +19,61 @@ message Message {
     required int32 ttl = 4;
 }
 
+// whisper
+
 message Envelope {
     required bytes envelope = 1;
 }
 
+// dht
+
+message NullMessage {
+    optional bool dummy = 1;
+}
+
+message ItemHash {
+    required string hash = 1;
+}
+
+message NodeAddress {
+    required string address = 1;
+}
+
+message OptionalNodeAddress {
+    required bool hasValue = 1;
+    optional NodeAddress nodeAddress = 2;
+}
+
+message StoredItem {
+    required string hash = 1;
+    required string data = 2;
+}
+
+message OptionalStoredItem {
+    required bool hasValue = 1;
+    optional StoredItem storedItem = 2;
+}
+
 service BackendService {
+
+    // frontend
+
     rpc Connect (ConnectInfo) returns (SimpleResponse);
-    rpc GetUsers (User) returns (stream User);
     rpc SendMessage (Message) returns (SimpleResponse);
 
+    // whisper
+
     rpc HandleMewEnvelope (Envelope) returns (SimpleResponse);
+
+    // dht
+
+    rpc Ping (NullMessage) returns (NullMessage);
+    rpc Dock (NodeAddress) returns (NullMessage);
+
+    rpc GetSucc (NullMessage) returns (OptionalNodeAddress);
+    rpc GetPred (NullMessage) returns (OptionalNodeAddress);
+
+    rpc GetItem (ItemHash) returns (OptionalStoredItem);
+    rpc SetItem (StoredItem) returns (NullMessage);
+    rpc CopyData (NodeAddress) returns (stream StoredItem);
 }
