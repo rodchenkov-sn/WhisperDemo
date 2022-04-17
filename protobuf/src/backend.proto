@@ -8,8 +8,7 @@ message ConnectInfo {
     required string username = 1;
     required string dockingUrl = 2;
     required int32 redockPort = 3;
-    required int32 whisperPort = 4;
-    required string frontendUrl = 5;
+    required string frontendUrl = 4;
 }
 
 message SimpleResponse {
@@ -24,8 +23,14 @@ message Message {
     required int32 ttl = 4;
 }
 
+message Envelope {
+    required bytes envelope = 1;
+}
+
 service BackendService {
     rpc Connect (ConnectInfo) returns (SimpleResponse);
     rpc GetUsers (User) returns (stream User);
     rpc SendMessage (Message) returns (SimpleResponse);
+
+    rpc HandleMewEnvelope (Envelope) returns (SimpleResponse);
 }

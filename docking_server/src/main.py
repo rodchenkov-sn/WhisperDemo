@@ -13,7 +13,7 @@ app = Flask(__name__)
 @dataclass
 class Client:
     base: str
-    whisper_port: int
+    listen_port: int
     redock_port: int
 
 
@@ -37,7 +37,7 @@ user_infos = []
 
 def request_redock(source: Client, target: Client):
     adr = f'http://{source.base}:{source.redock_port}/redock'
-    requests.post(adr, json={'next': f'{target.base}:{target.whisper_port}'})
+    requests.post(adr, json={'next': f'{target.base}:{target.listen_port}'})
 
 
 @app.errorhandler(400)
@@ -50,20 +50,20 @@ def add_new_peer():
     if not request.json:
         abort(400)
     ip = request.environ['REMOTE_ADDR']
-    whisper_port = request.json['whisper_port']
+    listen_port = request.json['listen_port']
     redock_port = request.json['redock_port']
-    new_tail = Client(ip, whisper_port, redock_port)
+    new_tail = Client(ip, listen_port, redock_port)
     print(f'==> docking {new_tail}', file=sys.stdout)
     if netinfo.head is None:
-        netinfo.head = Client(ip, whisper_port, redock_port)
-        netinfo.tail = Client(ip, whisper_port, redock_port)
+        netinfo.head = Client(ip, listen_port, redock_port)
+        netinfo.tail = Client(ip, listen_port, redock_port)
     else:
         request_redock(netinfo.tail, new_tail)
     netinfo.tail = new_tail
     username = request.json['username']
     pubkey = request.json['pubkey']
     user_infos.append(UserInfo(username, pubkey))
-    return jsonify({'next': f'{netinfo.head.base}:{netinfo.head.whisper_port}'}), 200
+    return jsonify({'next': f'{netinfo.head.base}:{netinfo.head.listen_port}'}), 200
 
 
 @app.get('/users')

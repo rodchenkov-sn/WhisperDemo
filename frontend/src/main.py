@@ -27,10 +27,9 @@ class FrontendServicer(fss.FrontendServiceServicer):
 
 
 class UserInterface(threading.Thread):
-    def __init__(self, backend_port: int, whisper_port: int, redock_port: int, listener_port: int, docker_url: str, username: str):
+    def __init__(self, backend_port: int, redock_port: int, listener_port: int, docker_url: str, username: str):
         super().__init__()
         self.__backend_port = backend_port
-        self.__whisper_port = whisper_port
         self.__redock_port = redock_port
         self.__listener_port = listener_port
         self.__docker_url = docker_url
@@ -78,7 +77,6 @@ class UserInterface(threading.Thread):
                     username=self.__username,
                     dockingUrl = self.__docker_url,
                     redockPort = self.__redock_port,
-                    whisperPort = self.__whisper_port,
                     frontendUrl = f'localhost:{self.__listener_port}'
                 ))
                 if resp.ok:
@@ -91,13 +89,12 @@ class UserInterface(threading.Thread):
 
 def main():
     backend_port = int(input('backend port: '))
-    whisper_port = int(input('whisper port: '))
     redock_port = int(input('redock port: '))
     listener_port = int(input('listener port: '))
     docker_url = input('docker url: ')
     username = input('username: ')
 
-    ui = UserInterface(backend_port, whisper_port, redock_port, listener_port, docker_url, username)
+    ui = UserInterface(backend_port, redock_port, listener_port, docker_url, username)
     ui.start()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
